@@ -8,7 +8,10 @@ const NavigationGrid: React.FC<NavigationGridProps> = ({
   currentQuestion, 
   answeredQuestions, 
   onQuestionClick,
-  className = ''
+  className = '',
+  onSubmit,
+  isSubmitted = false,
+  isSubmitting = false
 }) => {
   return (
     <div className={className}>
@@ -69,8 +72,8 @@ const NavigationGrid: React.FC<NavigationGridProps> = ({
       </div>
       
       {/* Summary */}
-      <div className="mt-4 p-3 bg-secondary-50 rounded-lg">
-        <div className="text-sm text-secondary-700">
+      <div className="mt-4 p-3 bg-slate-50 rounded-lg">
+        <div className="text-sm text-slate-700">
           <div className="flex justify-between">
             <span>Answered:</span>
             <span className="font-medium">{answeredQuestions.length}/{totalQuestions}</span>
@@ -81,6 +84,36 @@ const NavigationGrid: React.FC<NavigationGridProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Submit Button */}
+      {!isSubmitted && (
+        <div className="mt-4">
+          <button
+            onClick={() => onSubmit?.()}
+            disabled={answeredQuestions.length < totalQuestions || isSubmitting}
+            className={`w-full py-3 px-6 rounded-lg font-medium transition-all duration-200 ${
+              answeredQuestions.length >= totalQuestions && !isSubmitting
+                ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-sm hover:shadow'
+                : 'bg-slate-300 text-slate-500 cursor-not-allowed'
+            }`}
+          >
+            {isSubmitting ? (
+              <span className="flex items-center justify-center gap-2">
+                <div className="w-4 h-4 border-2 border-slate-400 border-t-transparent rounded-full animate-spin"></div>
+                Submitting...
+              </span>
+            ) : answeredQuestions.length >= totalQuestions ? (
+              <span className="flex items-center justify-center gap-2">
+                Submit Quiz
+              </span>
+            ) : (
+              <span className="flex items-center justify-center gap-2">
+                Answer all questions to submit
+              </span>
+            )}
+          </button>
+        </div>
+      )}
     </div>
   );
 };

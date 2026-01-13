@@ -36,11 +36,18 @@ const QuestionCard = ({
           setClickedAnswer(null);
         }, 500); // Small delay
       } else {
-        // Navigate to results page after last question
-        setTimeout(() => {
-          setClickedAnswer(null);
-          navigate('/results');
-        }, 500);
+        // // Only auto-navigate to results if all questions are answered
+        // const willBeCompleted = answeredQuestionsCount + (selectedAnswer ? 0 : 1) >= totalQuestions;
+        // if (willBeCompleted && onSubmit) {
+        //   setTimeout(() => {
+        //     setClickedAnswer(null);
+        //     onSubmit();
+        //   }, 500);
+        // } else {
+        //   setTimeout(() => {
+        //     setClickedAnswer(null);
+        //   }, 500);
+        // }
       }
     }
   };

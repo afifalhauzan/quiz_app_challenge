@@ -1,12 +1,16 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
 import QuestionCard from '../components/QuestionCard';
 import NavigationGrid from '../components/NavigationGrid';
+import Timer from '../components/Timer';
 import { useQuizData } from '../hooks/useQuizData';
 import { useQuizPersistence } from '../hooks/useQuizPersistence';
 
 const QuizPage: React.FC = () => {
+  const navigate = useNavigate();
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { 
     questions, 
     loading, 
@@ -15,7 +19,12 @@ const QuizPage: React.FC = () => {
     setCurrentQuestionIndex,
     answers,
     setAnswer,
-    isSubmitted 
+    isSubmitted,
+    timeRemaining,
+    handleTimeUpdate,
+    handleTimeUp,
+    submitQuiz,
+    getAnsweredQuestionsCount
   } = useQuizData();
 
   const { 
@@ -58,7 +67,8 @@ const QuizPage: React.FC = () => {
     saveProgress({
       currentQuestionIndex,
       answers: { ...answers, [currentQuestionIndex]: answer },
-      timestamp: new Date().toISOString(),
+      timeRemaining,
+      timerStartTime: Date.now() - (90 - timeRemaining) * 1000,
       isSubmitted: false
     });
   };
@@ -68,7 +78,8 @@ const QuizPage: React.FC = () => {
     saveProgress({
       currentQuestionIndex: index,
       answers,
-      timestamp: new Date().toISOString(),
+      timeRemaining,
+      timerStartTime: Date.now() - (90 - timeRemaining) * 1000,
       isSubmitted: false
     });
   };
@@ -80,9 +91,24 @@ const QuizPage: React.FC = () => {
       saveProgress({
         currentQuestionIndex: newIndex,
         answers,
-        timestamp: new Date().toISOString(),
+        timeRemaining,
+        timerStartTime: Date.now() - (90 - timeRemaining) * 1000,
         isSubmitted: false
       });
+    }
+  };
+
+  const handleSubmit = async (): Promise<void> => {
+    if (isSubmitting) return; // Prevent double submission
+    
+    try {
+      setIsSubmitting(true);
+      await submitQuiz();
+      navigate('/results');
+    } catch (error) {
+      console.error('Failed to submit quiz:', error);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -134,6 +160,15 @@ const QuizPage: React.FC = () => {
           transition={{ duration: 0.5, delay: 0.1 }}
         >
           <div className="space-y-6">
+            {/* Timer */}
+            <div className="bg-white rounded-xl shadow-sm p-6">
+              <Timer 
+                timeRemaining={timeRemaining}
+                onTimeUpdate={handleTimeUpdate}
+                onTimeUp={handleTimeUp}
+              />
+            </div>
+            
             {/* Question Navigation Grid */}
             <div className="bg-white rounded-xl shadow-sm p-6">
               <NavigationGrid
@@ -141,6 +176,9 @@ const QuizPage: React.FC = () => {
                 currentQuestion={currentQuestionIndex}
                 answeredQuestions={Object.keys(answers).map(Number)}
                 onQuestionClick={handleQuestionNavigate}
+                onSubmit={handleSubmit}
+                isSubmitted={isSubmitted}
+                isSubmitting={isSubmitting}
               />
             </div>
           </div>

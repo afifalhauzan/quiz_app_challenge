@@ -1,6 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import useSWR from 'swr';
+import { useNavigate } from 'react-router-dom';
 import { quizService } from '../services/quizService';
+import { useQuizPersistence } from './useQuizPersistence';
 import type { 
   QuizQuestion,
   QuizAnswers,
@@ -9,31 +11,40 @@ import type {
   QuizProgress
 } from '../types/quiz';
 
-const PERSISTENCE_KEY = 'quiz_app_progress';
-
 export const useQuizData = (): UseQuizDataReturn => {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState<number>(0);
   const [answers, setAnswers] = useState<QuizAnswers>({});
   const [isSubmitted, setIsSubmitted] = useState<boolean>(false);
+  const [timeRemaining, setTimeRemaining] = useState<number>(90); // 2 minutes
+  
+  const navigate = useNavigate();
+  const { saveProgress, loadProgress, clearProgress, initializeTimer } = useQuizPersistence();
 
   // Load saved progress on initialization
   useEffect(() => {
     const loadSavedProgress = () => {
       try {
-        const saved = localStorage.getItem(PERSISTENCE_KEY);
-        if (saved) {
-          const progress: QuizProgress = JSON.parse(saved);
+        const progress = loadProgress();
+        if (progress) {
           setCurrentQuestionIndex(progress.currentQuestionIndex || 0);
           setAnswers(progress.answers || {});
           setIsSubmitted(progress.isSubmitted || false);
+          setTimeRemaining(progress.timeRemaining || 90);
+        } else {
+          // Initialize new timer if no progress exists
+          const newProgress = initializeTimer();
+          setTimeRemaining(newProgress.timeRemaining);
         }
       } catch (error) {
         console.error('Failed to load saved progress:', error);
+        // Fallback to new timer
+        const newProgress = initializeTimer();
+        setTimeRemaining(newProgress.timeRemaining);
       }
     };
 
     loadSavedProgress();
-  }, []);
+  }, []); // Remove dependencies that cause re-renders
 
   const { data: questions, error, isLoading: loading, mutate } = useSWR(
     'quiz/questions',
@@ -44,11 +55,30 @@ export const useQuizData = (): UseQuizDataReturn => {
     }
   );
 
+  const handleTimeUpdate = (newTime: number): void => {
+    setTimeRemaining(newTime);
+  };
+
   const setAnswer = (questionIndex: number, answer: string): void => {
-    setAnswers(prev => ({
-      ...prev,
-      [questionIndex]: answer
-    }));
+    setAnswers(prev => {
+      const newAnswers = {
+        ...prev,
+        [questionIndex]: answer
+      };
+      
+      // Save progress after updating answers
+      setTimeout(() => {
+        saveProgress({
+          currentQuestionIndex,
+          answers: newAnswers,
+          timeRemaining,
+          timerStartTime: Date.now() - (90 - timeRemaining) * 1000,
+          isSubmitted: false
+        });
+      }, 0);
+      
+      return newAnswers;
+    });
   };
 
   const calculateScore = (): number => {
@@ -72,7 +102,7 @@ export const useQuizData = (): UseQuizDataReturn => {
     return questions ? Object.keys(answers).length === questions.length : false;
   };
 
-  const submitQuiz = async (): Promise<QuizResult | undefined> => {
+  const submitQuiz = useCallback(async (): Promise<QuizResult | undefined> => {
     try {
       const score = calculateScore();
       const submissionData = {
@@ -92,7 +122,7 @@ export const useQuizData = (): UseQuizDataReturn => {
         correctAnswers: result.correctAnswers,
         percentage: result.percentage,
         answers,
-        timeTaken: 0, // TODO: Calculate actual time
+        timeTaken: 90 - timeRemaining,
         completedAt: submissionData.completedAt
       };
       
@@ -101,12 +131,27 @@ export const useQuizData = (): UseQuizDataReturn => {
       console.error('Failed to submit quiz:', error);
       throw error;
     }
-  };
+  }, [answers, questions]);
+
+  // Auto-submit when time runs out
+  const handleTimeUp = useCallback(async () => {
+    if (!isSubmitted) {
+      try {
+        await submitQuiz();
+        navigate('/results');
+      } catch (error) {
+        console.error('Auto-submit failed:', error);
+      }
+    }
+  }, [isSubmitted, submitQuiz, navigate]);
 
   const resetQuiz = () => {
     setCurrentQuestionIndex(0);
     setAnswers({});
     setIsSubmitted(false);
+    clearProgress();
+    const newProgress = initializeTimer();
+    setTimeRemaining(newProgress.timeRemaining);
     mutate(); // Refetch questions
   };
 
@@ -124,5 +169,9 @@ export const useQuizData = (): UseQuizDataReturn => {
     getAnsweredQuestionsCount,
     isQuizComplete,
     submitQuiz,
+    resetQuiz,
+    timeRemaining,
+    handleTimeUpdate,
+    handleTimeUp,
   };
 };

@@ -43,8 +43,24 @@ export interface QuizProgress {
   answers: QuizAnswers;
   quizStartTime?: number;
   quizEndTime?: number;
+  timeRemaining: number; // Time remaining in seconds
+  timerStartTime: number; // When the timer was started (timestamp)
   timestamp?: string; // Optional since saveProgress adds it automatically
   isSubmitted: boolean;
+}
+
+// ================== TIMER TYPES ==================
+
+export interface TimerProps {
+  timeRemaining: number;
+  onTimeUpdate?: (time: number) => void;
+  onTimeUp?: () => void;
+}
+
+export interface TimerState {
+  timeRemaining: number;
+  isActive: boolean;
+  startTime: number;
 }
 
 export interface QuizResult {
@@ -73,14 +89,20 @@ export interface UseQuizDataReturn {
   getAnsweredQuestionsCount: () => number;
   isQuizComplete: () => boolean;
   submitQuiz: () => Promise<QuizResult | undefined>;
+  resetQuiz: () => void;
+  timeRemaining: number;
+  handleTimeUpdate: (time: number) => void;
+  handleTimeUp: () => void;
 }
 
 // ================== QUIZ PERSISTENCE HOOK TYPES ==================
 
-export interface UseQuizPersistenceReturn { saveProgress: (progressData: QuizProgress) => void;
+export interface UseQuizPersistenceReturn { 
+  saveProgress: (progressData: QuizProgress) => void;
   loadProgress: () => QuizProgress | null;
   clearProgress: () => void;
   hasStoredProgress?: () => boolean;
+  initializeTimer: () => QuizProgress;
 }
 
 // ================== COMPONENT PROP TYPES ==================
@@ -118,6 +140,9 @@ export interface NavigationGridProps {
   answeredQuestions: number[];
   onQuestionClick: (questionIndex: number) => void;
   className?: string;
+  onSubmit?: () => void;
+  isSubmitted?: boolean;
+  isSubmitting?: boolean;
 }
 
 // ================== QUIZ SERVICE TYPES ==================
