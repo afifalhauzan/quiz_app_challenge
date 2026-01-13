@@ -68,61 +68,43 @@ class QuizService {
       
       const url = `${this.API_BASE_URL}?amount=${amount}&category=${category}&difficulty=${difficulty}&type=${type}`;
       
-      // Add retry logic for rate limiting
-      const maxRetries = 3;
-      let lastError: Error;
+      const response = await fetch(url);
       
-      for (let attempt = 1; attempt <= maxRetries; attempt++) {
-        try {
-          const response = await fetch(url);
-          
-          if (response.status === 429) {
-            // Rate limited - wait before retry
-            const waitTime = Math.pow(2, attempt) * 1000; // Exponential backoff
-            console.log(`Rate limited (429). Waiting ${waitTime}ms before retry ${attempt}/${maxRetries}`);
-            await new Promise(resolve => setTimeout(resolve, waitTime));
-            continue;
-          }
-          
-          if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-          }
-          
-          const data: OpenTDBResponse = await response.json();
-          
-          if (data.response_code !== 0) {
-            throw new Error(`OpenTDB API error: ${data.response_code}`);
-          }
-          
-          // Transform API questions to our format
-          const questions = data.results.map((apiQuestion, index) => 
-            this.transformQuestion(apiQuestion, index)
-          );
-          
-          // Store questions in localStorage
-          const sessionData = {
-            questions,
-            answers: {},
-            currentQuestionIndex: 0,
-            timeRemaining: 120,
-            timerStartTime: Date.now(),
-            isSubmitted: false,
-            timestamp: new Date().toISOString()
-          };
-          
-          localStorage.setItem(this.STORAGE_KEY, JSON.stringify(sessionData));
-          
-          return questions;
-          
-        } catch (error) {
-          lastError = error as Error;
-          if (attempt === maxRetries) {
-            throw error;
-          }
-        }
+      // If rate limited, immediately fall back to mock questions
+      if (response.status === 429) {
+        console.log('API rate limited (429), using fallback questions immediately');
+        throw new Error('Rate limited - using fallback');
       }
       
-      throw lastError!;
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data: OpenTDBResponse = await response.json();
+      
+      if (data.response_code !== 0) {
+        throw new Error(`OpenTDB API error: ${data.response_code}`);
+      }
+      
+      // Transform API questions to our format
+      const questions = data.results.map((apiQuestion, index) => 
+        this.transformQuestion(apiQuestion, index)
+      );
+      
+      // Store questions in localStorage
+      const sessionData = {
+        questions,
+        answers: {},
+        currentQuestionIndex: 0,
+        timeRemaining: 120,
+        timerStartTime: Date.now(),
+        isSubmitted: false,
+        timestamp: new Date().toISOString()
+      };
+      
+      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(sessionData));
+      
+      return questions;
     } catch (error) {
       console.error('Failed to fetch questions after retries:', error);
       
