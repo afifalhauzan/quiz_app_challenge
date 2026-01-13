@@ -1,12 +1,8 @@
 import { motion } from 'framer-motion';
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import type { QuestionCardProps } from '../types/quiz';
 
-// Helper function
-const decodeHtmlEntities = (text: string): string => {
-  const textarea = document.createElement('textarea');
-  textarea.innerHTML = text;
-  return textarea.value;
-};
 
 const QuestionCard = ({
   question,
@@ -19,6 +15,9 @@ const QuestionCard = ({
   isSubmitted,
   onNext
 }: QuestionCardProps) => {
+  const [clickedAnswer, setClickedAnswer] = useState<string | null>(null);
+  const navigate = useNavigate();
+  
   const allAnswers = [
     question.correct_answer,
     ...question.incorrect_answers
@@ -26,13 +25,22 @@ const QuestionCard = ({
 
   const handleAnswerClick = (answer: string): void => {
     if (!isSubmitted) {
+      // Set the clicked answer for visual feedback
+      setClickedAnswer(answer);
       onAnswerSelect(answer);
       
       // Auto-advance to next question after a short delay (unless it's the last question)
       if (!isLast && onNext) {
         setTimeout(() => {
           onNext();
-        }, 500); // Small delay to show the selection before advancing
+          setClickedAnswer(null);
+        }, 500); // Small delay
+      } else {
+        // Navigate to results page after last question
+        setTimeout(() => {
+          setClickedAnswer(null);
+          navigate('/results');
+        }, 500);
       }
     }
   };
@@ -43,7 +51,7 @@ const QuestionCard = ({
       <div className="flex-1">
         <div className="mb-6">
           <div className="flex items-center justify-between mb-4">
-            <span className="text-sm font-medium text-blue-600 bg-blue-50 px-3 py-1 rounded-full">
+            <span className="text-sm font-bold text-blue-600 bg-blue-50 px-3 py-1 rounded-full">
               Question {questionNumber}
             </span>
             <span className="text-xs text-slate-500 bg-slate-100 px-2 py-1 rounded">
@@ -52,11 +60,10 @@ const QuestionCard = ({
           </div>
           
           <h2 
-            className="text-xl font-semibold text-slate-800 leading-relaxed"
-            dangerouslySetInnerHTML={{ 
-              __html: decodeHtmlEntities(question.question) 
-            }}
-          />
+            className="text-xl font-bold text-slate-800 leading-relaxed"
+          >
+            {question.question}
+          </h2>
           
           {question.difficulty && (
             <div className="mt-3">
@@ -78,9 +85,15 @@ const QuestionCard = ({
           {allAnswers.map((answer, index) => {
             const isSelected = selectedAnswer === answer;
             const isCorrect = answer === question.correct_answer;
+            const isClicked = clickedAnswer === answer;
             
             // Show correct/incorrect styling only after submission
             const getAnswerStyling = () => {
+              // Show blue feedback immediately when clicked (before submission)
+              if (isClicked && !isSubmitted) {
+                return 'border-blue-500 bg-blue-500 ring-2 ring-blue-300 text-white';
+              }
+              
               if (!isSubmitted) {
                 return isSelected 
                   ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-200' 
@@ -106,21 +119,22 @@ const QuestionCard = ({
               >
                 <div className="flex items-center gap-3">
                   <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center text-xs font-medium ${
-                    isSelected 
-                      ? isSubmitted
-                        ? (isCorrect ? 'border-green-500 bg-green-500 text-white' : 'border-red-500 bg-red-500 text-white')
-                        : 'border-blue-500 bg-blue-500 text-white'
-                      : 'border-slate-300 text-slate-500'
+                    isClicked && !isSubmitted
+                      ? 'border-white bg-white text-blue-500'
+                      : isSelected 
+                        ? isSubmitted
+                          ? (isCorrect ? 'border-green-500 bg-green-500 text-white' : 'border-red-500 bg-red-500 text-white')
+                          : 'border-blue-500 bg-blue-500 text-white'
+                        : 'border-slate-300 text-slate-500'
                   }`}>
                     {String.fromCharCode(65 + index)}
                   </div>
                   
                   <span 
-                    className="flex-1 text-slate-800"
-                    dangerouslySetInnerHTML={{ 
-                      __html: decodeHtmlEntities(answer) 
-                    }}
-                  />
+                    className={`flex-1 ${isClicked && !isSubmitted ? 'text-white' : 'text-slate-800'}`}
+                  >
+                    {answer}
+                  </span>
                 </div>
               </motion.button>
             );
