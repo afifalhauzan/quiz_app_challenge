@@ -3,9 +3,11 @@ import { SWRConfig } from 'swr';
 import LoginPage from './pages/LoginPage';
 import QuizPage from './pages/QuizPage';
 import ResultPage from './pages/ResultPage';
+import ProtectedRoute from './routes/ProtectedRoute';
+import { AuthProvider } from './hooks/useAuth';
 
 const swrConfig = {
-  fetcher: (url: any) => fetch(url).then((res) => res.json()),
+  fetcher: (url: string) => fetch(url).then((res) => res.json()),
   revalidateOnFocus: false,
   revalidateOnReconnect: false,
   shouldRetryOnError: false,
@@ -14,30 +16,38 @@ const swrConfig = {
 function AppContent() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-50 to-secondary-100">
-      <Routes>
-        <Route
-          path="/login"
-          element={<LoginPage />} />
-
-        <Route
-          path="/"
-          element={
-            <QuizPage />
-          }
-        />
-        <Route
-          path="/quiz"
-          element={
-            <QuizPage />
-          }
-        />
-        <Route
-          path="/results"
-          element={
-            <ResultPage />
-          }
-        />
-      </Routes>
+      <AuthProvider>
+      <div className="">
+        <Routes>
+          <Route path="/login" element={<LoginPage />} />
+          
+          <Route
+            path="/"
+            element={
+              <ProtectedRoute>
+                <QuizPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/quiz"
+            element={
+              <ProtectedRoute>
+                <QuizPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/results"
+            element={
+              <ProtectedRoute>
+                <ResultPage />
+              </ProtectedRoute>
+            }
+          />
+        </Routes>
+      </div>
+    </AuthProvider>
     </div>
   );
 }
