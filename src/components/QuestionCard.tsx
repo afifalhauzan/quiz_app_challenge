@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { QuestionCardProps } from '../types/quiz';
 
@@ -18,10 +18,26 @@ const QuestionCard = ({
   const [clickedAnswer, setClickedAnswer] = useState<string | null>(null);
   const navigate = useNavigate();
   
-  const allAnswers = [
-    question.correct_answer,
-    ...question.incorrect_answers
-  ];
+  // Shuffle answers randomly so correct answer isn't always first
+  // Use useMemo to recalculate when question changes
+  const allAnswers = useMemo(() => {
+    const answers = [
+      question.correct_answer,
+      ...question.incorrect_answers
+    ];
+    
+    // Create a deterministic but pseudo-random shuffle based on question content
+    // This ensures the same question always has the same shuffle order
+    const seed = question.question.length + question.correct_answer.length;
+    
+    // Fisher-Yates shuffle with seeded random
+    for (let i = answers.length - 1; i > 0; i--) {
+      const j = Math.floor(((seed + i) * 9301 + 49297) % 233280 / 233280) * (i + 1);
+      [answers[i], answers[j]] = [answers[j], answers[i]];
+    }
+    
+    return answers;
+  }, [question]);
 
   const handleAnswerClick = (answer: string): void => {
     if (!isSubmitted) {

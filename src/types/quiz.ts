@@ -41,6 +41,7 @@ export interface QuizState {
 export interface QuizProgress {
   currentQuestionIndex: number;
   answers: QuizAnswers;
+  questions?: QuizQuestion[]; // Store questions in localStorage
   quizStartTime?: number;
   quizEndTime?: number;
   timeRemaining: number; // Time remaining in seconds
@@ -89,7 +90,7 @@ export interface UseQuizDataReturn {
   getAnsweredQuestionsCount: () => number;
   isQuizComplete: () => boolean;
   submitQuiz: () => Promise<QuizResult | undefined>;
-  resetQuiz: () => void;
+  resetQuiz: () => Promise<void>;
   timeRemaining: number;
   handleTimeUpdate: (time: number) => void;
   handleTimeUp: () => void;
@@ -155,6 +156,7 @@ export interface QuizServiceResponse {
 
 export interface QuizSubmissionData {
   answers: QuizAnswers;
+  questions: QuizQuestion[];
   timeSpent: number;
   completedAt: string;
   userId?: string | number;
