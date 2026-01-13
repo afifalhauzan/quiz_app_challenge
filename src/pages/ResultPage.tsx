@@ -56,15 +56,15 @@ const ResultPage = () => {
               >
                 {getScoreIcon()}
               </motion.div>
-              
+
               <h1 className="text-3xl font-bold text-slate-800 mb-2">
                 Quiz Completed!
               </h1>
-              
+
               <div className={`text-6xl font-bold ${getScoreColor()} mb-4`}>
                 {percentage}%
               </div>
-              
+
               <div className="text-lg text-slate-600 mb-6 space-y-1">
                 <div className="flex items-center justify-center gap-2">
                   <span>✅ Correct:</span>
@@ -78,6 +78,14 @@ const ResultPage = () => {
                   <span>📝 Total Questions:</span>
                   <span className="font-semibold text-slate-800">{questions?.length ?? 0}</span>
                 </div>
+                <div className="flex items-center justify-center gap-2">
+                  <span>Answered:</span>
+                  <span className="font-semibold text-blue-600">{Object.keys(answers || {}).length}</span>
+                </div>
+                <div className="flex items-center justify-center gap-2">
+                  <span>Skipped:</span>
+                  <span className="font-semibold text-orange-600">{(questions?.length ?? 0) - Object.keys(answers || {}).length}</span>
+                </div>
               </div>
 
               <div className="flex flex-col sm:flex-row gap-4">
@@ -88,7 +96,7 @@ const ResultPage = () => {
                   <RotateCcw className="w-4 h-4" />
                   Retake Quiz
                 </button>
-                
+
                 <button
                   onClick={handleLogOut}
                   className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium px-6 py-3 rounded-lg transition-colors duration-200 flex items-center gap-2"
@@ -111,12 +119,12 @@ const ResultPage = () => {
           <h2 className="text-xl font-semibold text-slate-800 mb-6">
             Detailed Results
           </h2>
-          
+
           <div className="space-y-4">
             {questions?.map((question, index) => {
               const userAnswer = answers[index];
               const isCorrect = userAnswer === question.correct_answer;
-              
+
               return (
                 <motion.div
                   key={index}
@@ -133,7 +141,7 @@ const ResultPage = () => {
                         <XCircle className="w-5 h-5 text-red-600" />
                       )}
                     </div>
-                    
+
                     <div className="flex-1">
                       <div className="flex items-center justify-between mb-2">
                         <h3 className="font-medium text-slate-800">
@@ -143,32 +151,31 @@ const ResultPage = () => {
                           {question.category}
                         </span>
                       </div>
-                      
-                      <p 
+
+                      <p
                         className="text-slate-700 mb-3 leading-relaxed"
-                        dangerouslySetInnerHTML={{ __html: question.question }}
-                      />
-                      
+                      > {question.question}
+                      </p>
+
                       <div className="space-y-2 text-sm">
                         <div className={`${isCorrect ? 'text-green-700' : 'text-red-700'}`}>
                           <strong>Your answer:</strong> {userAnswer || 'Not answered'}
                         </div>
-                        
+
                         {!isCorrect && (
                           <div className="text-green-700">
                             <strong>Correct answer:</strong> {question.correct_answer}
                           </div>
                         )}
-                        
+
                         {question.difficulty && (
                           <div className="mt-2">
-                            <span className={`text-xs px-2 py-1 rounded-full font-medium ${
-                              question.difficulty === 'easy' 
+                            <span className={`text-xs px-2 py-1 rounded-full font-medium ${question.difficulty === 'easy'
                                 ? 'bg-green-100 text-green-700'
                                 : question.difficulty === 'medium'
-                                ? 'bg-yellow-100 text-yellow-700'
-                                : 'bg-red-100 text-red-700'
-                            }`}>
+                                  ? 'bg-yellow-100 text-yellow-700'
+                                  : 'bg-red-100 text-red-700'
+                              }`}>
                               {question.difficulty}
                             </span>
                           </div>

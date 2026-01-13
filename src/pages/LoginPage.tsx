@@ -9,6 +9,7 @@ import type { LoginCredentials, LoginFormData } from '../types/auth';
 const LoginPage = () => {
   const { user, login, loading } = useAuth();
   const { register, handleSubmit, formState: { errors } } = useForm<LoginFormData>();
+  const [loginError, setLoginError] = useState<string>('');
 
   // Redirect if already logged in
   if (user) {
@@ -17,9 +18,11 @@ const LoginPage = () => {
 
   const onSubmit = async (data: LoginFormData) => {
     try {
+      setLoginError(''); // Clear previous errors
       await login(data as LoginCredentials);
     } catch (error) {
       console.error('Login error:', error);
+      setLoginError('Invalid username or password. Please try again.');
     }
   };
 
@@ -36,9 +39,20 @@ const LoginPage = () => {
             <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <LogIn className="w-8 h-8 text-blue-600" />
             </div>
-            <h1 className="text-2xl font-bold text-slate-800 mb-2">Welcome to Quiz App</h1>
+            <h1 className="text-2xl font-bold text-slate-800 mb-2">Welcome to RandomQuiz App</h1>
             <p className="text-md font-semibold text-blue-600">Please sign in to start your quiz</p>
           </div>
+
+          {/* Login Error Message */}
+          {loginError && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg"
+            >
+              <p className="text-red-600 text-sm font-medium text-center">{loginError}</p>
+            </motion.div>
+          )}
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             <div>
