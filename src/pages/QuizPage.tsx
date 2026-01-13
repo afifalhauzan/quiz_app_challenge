@@ -23,8 +23,7 @@ const QuizPage: React.FC = () => {
     timeRemaining,
     handleTimeUpdate,
     handleTimeUp,
-    submitQuiz,
-    getAnsweredQuestionsCount
+    submitQuiz
   } = useQuizData();
 
   const { 

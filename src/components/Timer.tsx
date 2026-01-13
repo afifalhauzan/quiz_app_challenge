@@ -5,7 +5,6 @@ import type { TimerProps } from '../types/quiz';
 
 const Timer = ({ timeRemaining, onTimeUpdate, onTimeUp }: TimerProps) => {
   const [time, setTime] = useState<number>(timeRemaining || 90); // Default 2 minutes
-  const [isLowTime, setIsLowTime] = useState<boolean>(false);
   const [isCriticalTime, setIsCriticalTime] = useState<boolean>(false);
 
   useEffect(() => {
@@ -22,7 +21,6 @@ const Timer = ({ timeRemaining, onTimeUpdate, onTimeUp }: TimerProps) => {
         }
         
         const newTime = prevTime - 1;
-        setIsLowTime(newTime <= 60); // Yellow at 1 minute
         setIsCriticalTime(newTime <= 30); // Red with message at 30 seconds
         onTimeUpdate?.(newTime);
         return newTime;

@@ -1,22 +1,18 @@
 import { motion } from 'framer-motion';
 import { useState, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
 import type { QuestionCardProps } from '../types/quiz';
 
 
 const QuestionCard = ({
   question,
   questionNumber,
-  totalQuestions,
   selectedAnswer,
   onAnswerSelect,
-  isFirst,
   isLast,
   isSubmitted,
   onNext
 }: QuestionCardProps) => {
   const [clickedAnswer, setClickedAnswer] = useState<string | null>(null);
-  const navigate = useNavigate();
   
   // Shuffle answers randomly so correct answer isn't always first
   // Use useMemo to recalculate when question changes

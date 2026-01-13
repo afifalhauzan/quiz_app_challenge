@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { CheckCircle, Circle } from 'lucide-react';
+import { CheckCircle } from 'lucide-react';
 import type { NavigationGridProps } from '../types/quiz';
 
 const NavigationGrid: React.FC<NavigationGridProps> = ({ 
