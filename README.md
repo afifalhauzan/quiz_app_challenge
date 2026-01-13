@@ -1,73 +1,91 @@
-# React + TypeScript + Vite
+# Quiz App Challenge📝
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A modern, high-performance Quiz Application built with React 19, Tailwind CSS v4, and TypeScript. This project was developed as a technical challenge, focusing on seamless user experience, state resilience, and clean architecture.
 
-Currently, two official plugins are available:
+## ✨ Key Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+Secure Authentication: Simple and effective login system to manage user sessions and protect quiz state.
 
-## React Compiler
+Smart Persistence (Resume Quiz): Advanced state management using localStorage. If the browser is refreshed or closed, the quiz resumes exactly where the user left off, including the specific question set and the remaining time.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Real-time Timer: Accurate countdown timer with auto-submission functionality when time runs out.
 
-## Expanding the ESLint configuration
+Dynamic UI: One-question-at-a-time interface with smooth transitions and interaction feedback powered by Framer Motion.
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+Detailed Analytics: Comprehensive results page showing correct/incorrect answers, score percentage, and a review of all questions.
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+Responsive Design: Fully optimized for mobile, tablet, and desktop using the latest Tailwind CSS v4 engine.
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+## 🛠️ Tech Stack
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+### Frontend
+React 19, TypeScript
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### Styling
+Tailwind CSS v4
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+### State & Fetching
+SWR (Efficient caching & synchronization)
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+### Animations
+Framer Motion
+
+### Icons
+Lucide React
+
+### Build Tool
+Vite
+
+## 🚀 Getting Started
+
+1. Clone the repository
+
+git clone [https://github.com/afifalhauzan/quiz_app_challenge.git](https://github.com/afifalhauzan/quiz_app_challenge.git)
+cd quiz_app_challenge
+
+
+2. Install dependencies
+
+npm install
+
+
+3. Run the development server
+
+npm run dev
+
+
+🏗️ Project Structure
+
+The project follows a modular architecture designed for scalability and maintainability:
+
+/src
+ ├── /components  # Reusable UI (Timer, QuestionCards, Layouts)
+ 
+ ├── /hooks       # Custom logic (useQuizData, useQuizPersistence, useAuth)
+ 
+ ├── /pages       # Main application views (Login, Quiz, Results)
+ 
+ ├── /services    # API interaction logic and mock data services
+ 
+ ├── /types       # TypeScript interfaces and type definitions
+ 
+ └── /utils       # Helper functions (time formatters, score calculation)
+
+
+## 💡 Notes: State Resilience
+
+One of the main challenges of using a randomized API (like OpenTDB) is maintaining data consistency upon refresh. Standard implementations often lose the current question set or reset the timer when the user reloads the page.
+
+This implementation solves that by focusing on temporal and data consistency:
+
+Data Locking: Fetches a randomized set of questions only once at the start and immediately "locks" that specific set into localStorage.
+
+Temporal Consistency: Instead of saving "seconds remaining," we store the initial start timestamp. The remaining time is calculated dynamically:
+
+
+``` $$TimeRemaining = TotalDuration - (CurrentTime - StartTimestamp)$$ ```
+
+
+This ensures the timer remains accurate even if the user leaves the site and returns minutes later.
+
+Automatic Recovery: On mount, the application checks for an existing session and hydrates the state, allowing a "Zero-Interrupt" user experience.
